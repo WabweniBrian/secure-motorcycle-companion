@@ -34,7 +34,6 @@ export function EmergencyContactList({
   initialRiders,
 }: EmergencyContactListProps) {
   const router = useRouter();
-  const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -50,9 +49,6 @@ export function EmergencyContactList({
       const result = await deleteContact(selectedContact.id);
 
       if (result.success) {
-        setContacts(
-          contacts.filter((contact) => contact.id !== selectedContact.id)
-        );
         toast.success("Contact deleted successfully");
         setIsDeleteDialogOpen(false);
       } else {
@@ -158,7 +154,7 @@ export function EmergencyContactList({
 
       <DataTable
         columns={columns}
-        data={contacts}
+        data={initialContacts}
         searchPlaceholder="Search contacts..."
         searchColumn="name"
       />

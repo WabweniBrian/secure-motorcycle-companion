@@ -24,7 +24,13 @@ const AuthLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
           <div className="p-4 md:p-6">
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+            <Suspense
+              fallback={
+                <div className="text-center flex-center-center">Loading...</div>
+              }
+            >
+              {children}
+            </Suspense>
           </div>
         </div>
       </div>
