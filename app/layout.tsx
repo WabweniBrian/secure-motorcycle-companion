@@ -1,10 +1,16 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import type React from "react";
 import "./globals.css";
+import { EdgeStoreProvider } from "@/lib/edgestore";
+import BackToTopButton from "@/components/back-button";
+import { Toaster } from "react-hot-toast";
 
-const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-outfit",
+});
 
 export const metadata = {
   title: "Secure Motorcycle Companion Dashboard",
@@ -18,10 +24,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${outfit.variable} font-sans antialiased`}>
         {/* Next.js Top Loader */}
         <NextTopLoader color={"#3971ED"} zIndex={9999} />
-        {children}
+        <EdgeStoreProvider>{children}</EdgeStoreProvider>
+        <BackToTopButton />
         <Toaster />
       </body>
     </html>

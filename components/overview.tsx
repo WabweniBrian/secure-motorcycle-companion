@@ -1,69 +1,50 @@
-"use client"
+"use client";
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 
-const data = [
-  {
-    name: "Jan",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Feb",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Mar",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Apr",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "May",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Jun",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Jul",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Aug",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Sep",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Oct",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Nov",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-  {
-    name: "Dec",
-    total: Math.floor(Math.random() * 50) + 10,
-  },
-]
+interface OverviewProps {
+  data: {
+    name: string;
+    total: number;
+    month: number;
+  }[];
+}
 
-export function Overview() {
+export function Overview({ data }: OverviewProps) {
   return (
     <ResponsiveContainer width="100%" height={350}>
       <BarChart data={data}>
-        <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-        <Tooltip
-          contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px" }}
-          labelStyle={{ color: "#1e293b" }}
+        <XAxis
+          dataKey="name"
+          stroke="#888888"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
         />
-        <Bar dataKey="total" fill="#2563EB" radius={[4, 4, 0, 0]} />
+        <YAxis
+          stroke="#888888"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+          tickFormatter={(value) => `${value}`}
+        />
+        <Tooltip
+          contentStyle={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+          }}
+          labelStyle={{ color: "#1e293b" }}
+          formatter={(value: number) => [`${value} incidents`, "Total"]}
+        />
+        <Bar dataKey="total" fill="url(#colorGradient)" radius={[4, 4, 0, 0]} />
         <defs>
           <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
@@ -72,6 +53,5 @@ export function Overview() {
         </defs>
       </BarChart>
     </ResponsiveContainer>
-  )
+  );
 }
-

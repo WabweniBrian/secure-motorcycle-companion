@@ -1,0 +1,130 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+enum UserRole {
+  User
+  Admin
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  name                 String
+  email                String    @unique
+  password             String
+  image                String?
+  role                 UserRole  @default(User)
+  lastLogin            DateTime?
+  resetPasswordToken   String?   @unique
+  resetPasswordExpires DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([lastLogin])
+  @@index([name])
+}
+
+model Rider {
+  id             String   @id @default(uuid())
+  riderId        String   @unique // e.g "RID-104"
+  name           String
+  email          String   @unique
+  phone          String
+  address        String?
+  hasHadIncident Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  emergencyContact Contact?
+  helmet           Helmet?
+  incidents        Incident[]
+
+  @@index([name])
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  riderId   String   @unique
+  name      String
+  relation  String
+  phone     String
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+  @@index([name])
+}
+
+model Helmet {
+  id             String          @id @default(uuid())
+  riderId        String          @unique
+  helmetId       String          @unique // e.g "H-204"
+  battery        String? // Battery - From ThingSpeak
+  temperature    String? // Temperature - From ThingSpeak
+  status         HelmetStatus? // Helmet status - From ThingSpeak
+  lastActiveAt   DateTime? // Last active time - From ThingSpeak
+  latitude       String? // GPS coordinates - From ThingSpeak
+  longitude      String? // GPS coordinates - From ThingSpeak
+  signalStrength SignalStrength? //  Signal strength - From ThingSpeak
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  rider     Rider      @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  incidents Incident[]
+
+  @@index([riderId])
+}
+
+model Incident {
+  id          String         @id @default(uuid())
+  incidentId  String         @unique // e.g "INC-104"
+  riderId     String
+  helmetId    String // From ThingSpeak
+  longitude   String? // GPS coordinates - From ThingSpeak
+  latitude    String? // GPS coordinates - From ThingSpeak
+  location    String?
+  description String?
+  date        DateTime
+  status      IncidentStatus
+  severity    Severity // Calculated severity - From ThingSpeak
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  rider  Rider  @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  helmet Helmet @relation(fields: [helmetId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+}
+
+enum SignalStrength {
+  excellent
+  good
+  poor
+}
+
+enum HelmetStatus {
+  active
+  inactive
+}
+
+enum Severity {
+  severe
+  moderate
+  minor
+}
+
+enum IncidentStatus {
+  active
+  resolved
+  investigating
+}

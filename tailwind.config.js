@@ -1,9 +1,16 @@
-const { fontFamily } = require("tailwindcss/defaultTheme")
-
 /** @type {import('tailwindcss').Config} */
+
+const defaultTheme = require("tailwindcss/defaultTheme");
+
+import plugin from "tailwindcss/plugin";
+
 module.exports = {
   darkMode: ["class"],
-  content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
+  content: [
+    "app/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
   theme: {
     container: {
       center: true,
@@ -13,7 +20,11 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-outfit)", ...defaultTheme.fontFamily.sans],
+      },
       colors: {
+        brand: "#3971ED",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -53,9 +64,6 @@ module.exports = {
         md: `calc(var(--radius) - 2px)`,
         sm: "calc(var(--radius) - 4px)",
       },
-      fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
-      },
       keyframes: {
         "accordion-down": {
           from: { height: 0 },
@@ -72,6 +80,35 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-}
-
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(function ({ addUtilities }) {
+      const newUtilities = {
+        ".text-muted": {
+          opacity: "0.8",
+        },
+        ".transition-a": {
+          transition: "all 0.3s ease-in-out",
+        },
+        ".box-shadow": {
+          "box-shadow": ".5rem .5rem 1.5rem rgba(0,0,0,0.1)",
+        },
+        ".flex-center-center": {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        ".flex-center-between": {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        },
+        ".flex-align-center": {
+          display: "flex",
+          alignItems: "center",
+        },
+      };
+      addUtilities(newUtilities);
+    }),
+  ],
+};

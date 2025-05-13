@@ -1,5 +1,9 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+"use client";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AlertCircle, AlertOctagon, AlertTriangle } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import type { Incident, Rider, Helmet } from "@/lib/generated/prisma";
 
 const incidentStyles = {
   minor: {
@@ -23,73 +27,70 @@ const incidentStyles = {
 };
 
 interface IncidentItemProps {
-  name: string;
-  email: string;
-  severity: string;
-  avatar: string;
+  incident: Incident & {
+    rider: Rider;
+    helmet: Helmet;
+  };
 }
 
-function IncidentItem({ name, email, severity, avatar }: IncidentItemProps) {
-  const style = incidentStyles[severity as keyof typeof incidentStyles];
+function IncidentItem({ incident }: IncidentItemProps) {
+  const style = incidentStyles[incident.severity];
   const Icon = style.icon;
+  const timeAgo = formatDistanceToNow(new Date(incident.date), {
+    addSuffix: true,
+  });
 
   return (
     <div
       className={`flex flex-col sm:flex-row items-start sm:items-center p-4 rounded-lg ${style.bg}`}
     >
       <Avatar className="h-10 w-10">
-        <AvatarImage src={avatar} alt={name} />
         <AvatarFallback>
-          {name
+          {incident.rider.name
             .split(" ")
             .map((n) => n[0])
             .join("")}
         </AvatarFallback>
       </Avatar>
       <div className="mt-2 sm:mt-0 sm:ml-4 flex-1">
-        <p className="text-sm font-medium leading-none">{name}</p>
-        <p className="text-sm text-muted-foreground">{email}</p>
+        <p className="text-sm font-medium leading-none">
+          {incident.rider.name}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {incident.helmet.helmetId}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">{timeAgo}</p>
       </div>
       <div className={`mt-2 sm:mt-0 flex items-center ${style.text}`}>
         <Icon className={`h-5 w-5 mr-1 ${style.iconColor}`} />
-        <span className="text-sm font-medium capitalize">{severity}</span>
+        <span className="text-sm font-medium capitalize">
+          {incident.severity}
+        </span>
       </div>
     </div>
   );
 }
 
-export function RecentIncidents() {
-  const incidents = [
-    {
-      name: "Olivia Martin",
-      email: "olivia.martin@email.com",
-      severity: "minor",
-      avatar: "/avatars/01.png",
-    },
-    {
-      name: "Jackson Lee",
-      email: "jackson.lee@email.com",
-      severity: "severe",
-      avatar: "/avatars/02.png",
-    },
-    {
-      name: "Isabella Nguyen",
-      email: "isabella.nguyen@email.com",
-      severity: "moderate",
-      avatar: "/avatars/03.png",
-    },
-    {
-      name: "William Kim",
-      email: "will@email.com",
-      severity: "minor",
-      avatar: "/avatars/04.png",
-    },
-  ];
+interface RecentIncidentsProps {
+  incidents: (Incident & {
+    rider: Rider;
+    helmet: Helmet;
+  })[];
+}
+
+export function RecentIncidents({ incidents }: RecentIncidentsProps) {
+  if (incidents.length === 0) {
+    return (
+      <div className="text-center py-6 text-muted-foreground">
+        No recent incidents
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      {incidents.map((incident, index) => (
-        <IncidentItem key={index} {...incident} />
+      {incidents.map((incident) => (
+        <IncidentItem key={incident.id} incident={incident} />
       ))}
     </div>
   );
