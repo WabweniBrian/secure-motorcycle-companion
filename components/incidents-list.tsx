@@ -91,7 +91,6 @@ export function IncidentsList({ incidents }: IncidentsListProps) {
     (incident) =>
       incident.incidentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       incident.rider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      incident.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       incident.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       incident.helmet.helmetId.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -197,7 +196,14 @@ export function IncidentsList({ incidents }: IncidentsListProps) {
                   </div>
                   <div className="flex items-center text-sm text-gray-500">
                     <MapPin className="h-4 w-4 mr-1" />
-                    {incident.location || "Unknown Location"}
+                    <a
+                      href={`https://www.google.com/maps?daddr=${incident.latitude},${incident.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      View on Google Maps
+                    </a>
                   </div>
                   <div className="text-sm text-gray-500">
                     Helmet ID: {incident.helmet.helmetId}

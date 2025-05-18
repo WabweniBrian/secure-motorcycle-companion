@@ -19,7 +19,7 @@ export function HelmetMap({ helmets, riders }: HelmetMapProps) {
   const mapInitializedRef = useRef(false);
 
   // Get real-time data from context
-  const { helmetsData, locationNames } = useHelmetData();
+  const { helmetsData } = useHelmetData();
 
   const getRiderName = useCallback(
     (riderId: string) => {
@@ -87,7 +87,7 @@ export function HelmetMap({ helmets, riders }: HelmetMapProps) {
 
     // Process each helmet
     helmets.forEach((helmet) => {
-      const thingSpeakData = helmetsData[helmet.id];
+      const thingSpeakData = helmetsData[helmet.helmetId];
 
       // Skip if no ThingSpeak data is available yet
       if (!thingSpeakData) return;
@@ -95,12 +95,16 @@ export function HelmetMap({ helmets, riders }: HelmetMapProps) {
       const lat = Number.parseFloat(thingSpeakData.latitude);
       const lng = Number.parseFloat(thingSpeakData.longitude);
 
+      console.log("Latitude:", lat);
+      console.log("Longitude:", lng);
+
       // Skip if coordinates are invalid
       if (isNaN(lat) || isNaN(lng)) return;
 
       const position: [number, number] = [lat, lng];
       const markerColor = getStatusColor(thingSpeakData.status);
-      const locationName = locationNames[helmet.id] || "Unknown Location";
+
+      const googleMapsUrl = `https://www.google.com/maps?daddr=${thingSpeakData.latitude},${thingSpeakData.longitude}`;
 
       // Create marker SVG
       const markerSvg = `
@@ -115,7 +119,16 @@ export function HelmetMap({ helmets, riders }: HelmetMapProps) {
         <div class="p-2">
           <h3 class="font-bold">${helmet.helmetId}</h3>
           <p>Rider: ${getRiderName(helmet.riderId)}</p>
-          <p>Location: ${locationName}</p>
+          <p>Location: 
+            <a
+                href='${googleMapsUrl}'
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                View on Google Maps
+              </a>
+          </p>
           <p>Battery: ${thingSpeakData.battery}</p>
           <p>Status: ${thingSpeakData.status}</p>
         </div>
@@ -181,7 +194,7 @@ export function HelmetMap({ helmets, riders }: HelmetMapProps) {
         map.setZoom(15);
       }
     }
-  }, [helmets, helmetsData, getRiderName, getStatusColor, locationNames]);
+  }, [helmets, helmetsData, getRiderName, getStatusColor]);
 
   return (
     <div className="relative h-[400px] w-full overflow-hidden rounded-lg">
@@ -204,7 +217,15 @@ export function HelmetMap({ helmets, riders }: HelmetMapProps) {
             Rider: {getRiderName(selectedHelmet.riderId)}
           </p>
           <p className="text-sm text-gray-600">
-            Location: {locationNames[selectedHelmet.id] || "Unknown Location"}
+            Location:
+            <a
+              href={`https://www.google.com/maps?daddr=${helmetsData[selectedHelmet.id]?.latitude},${helmetsData[selectedHelmet.id]?.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              View on Google Maps
+            </a>
           </p>
           <p className="text-sm">
             <span

@@ -29,6 +29,7 @@ import {
   updateContact,
   type ContactFormValues,
 } from "@/lib/actions/contact";
+import { updateThingSpeak } from "@/lib/contact";
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -72,13 +73,17 @@ export function ContactForm({
 
       if (result.success) {
         toast.success(initialData ? "Contact updated" : "Contact created");
+
+        // Update ThingSpeak with the phone number
+        await updateThingSpeak(values.phone);
+
         if (onSuccess) onSuccess();
         if (!initialData) form.reset();
       } else {
         toast.error((result.error as string) || "Something went wrong");
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
+    } catch (error: any) {
+      toast.error(`An unexpected error occurred: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

@@ -10,7 +10,6 @@ interface HelmetDataContextType {
   helmetsData: Record<string, ThingSpeakHelmetData>;
   isUpdating: boolean;
   lastUpdated: Date | null;
-  locationNames: Record<string, string>;
 }
 
 // ThingSpeak data structure
@@ -29,7 +28,6 @@ const HelmetDataContext = createContext<HelmetDataContextType>({
   helmetsData: {},
   isUpdating: false,
   lastUpdated: null,
-  locationNames: {},
 });
 
 // Hook to use the context
@@ -44,123 +42,39 @@ export function HelmetDataProvider({
   children,
   initialHelmets,
 }: HelmetDataProviderProps) {
-  // Store ThingSpeak data by helmet ID
   const [helmetsData, setHelmetsData] = useState<
     Record<string, ThingSpeakHelmetData>
-  >({});
+  >(
+    initialHelmets.reduce(
+      (acc, helmet) => {
+        acc[helmet.helmetId] = {
+          battery: "0%",
+          temperature: "0°C",
+          status: "inactive",
+          signalStrength: "poor",
+          latitude: "0.0",
+          longitude: "0.0",
+          lastActiveAt: new Date(),
+        };
+        return acc;
+      },
+      {} as Record<string, ThingSpeakHelmetData>
+    )
+  );
   const [isUpdating, setIsUpdating] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [locationNames, setLocationNames] = useState<Record<string, string>>(
-    {}
-  );
-
-  // Track if component is mounted
   const isMounted = useRef(true);
-  // Track last geocoding request time for rate limiting
-  const lastGeocodeTime = useRef<number>(0);
+  const lastProcessedTimestamp = useRef<string | null>(null);
 
-  // Initialize with default ThingSpeak data
-  useEffect(() => {
-    const initialData: Record<string, ThingSpeakHelmetData> = {};
-
-    initialHelmets.forEach((helmet) => {
-      // Generate random coordinates around Kampala, Uganda
-      const baseLat = 0.3437098237409289;
-      const baseLng = 32.57836596268075;
-
-      initialData[helmet.id] = {
-        battery: "85%",
-        temperature: "25°C",
-        status: "active",
-        signalStrength: "good",
-        latitude: baseLat.toString(),
-        longitude: baseLng.toString(),
-        lastActiveAt: new Date(),
-      };
-    });
-
-    setHelmetsData(initialData);
-
-    // Geocode the initial coordinates
-    Object.entries(initialData).forEach(([helmetId, data]) => {
-      geocodeCoordinates(data.latitude, data.longitude, helmetId);
-    });
-
-    return () => {
-      isMounted.current = false;
-    };
-  }, [initialHelmets]);
-
-  // Function to geocode coordinates to place names using Nominatim API
-  const geocodeCoordinates = async (
-    latitude: string,
-    longitude: string,
-    helmetId: string
-  ) => {
-    try {
-      // Respect Nominatim's rate limit (1 request per second)
-      const now = Date.now();
-      const timeSinceLast = now - lastGeocodeTime.current;
-      if (timeSinceLast < 1000) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000 - timeSinceLast)
-        );
-      }
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
-        {
-          headers: {
-            "User-Agent":
-              "HelmetTrackingApp/1.0 (contact: wabwenib66@gmail.com)",
-          },
-        }
-      );
-
-      lastGeocodeTime.current = Date.now();
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      console.log(data);
-      // Extract location name from Nominatim response
-      let locationName = "Unknown Location";
-
-      if (data.address) {
-        const address = data.address;
-        // Construct detailed address similar to display_name
-        const components = [
-          address.suburb, // e.g., "Mulago"
-          address.city || address.town, // e.g., "Kampala"
-          address.state, // e.g., "Central Region"
-          address.country, // e.g., "Uganda"
-        ].filter(Boolean); // Remove undefined/null values
-
-        locationName = components.join(", ").trim();
-      } else if (data.display_name) {
-        // Fallback to display_name if address is not structured
-        locationName = data.display_name;
-      }
-      // Update state with the new location name
-      setLocationNames((prev) => ({
-        ...prev,
-        [helmetId]: locationName,
-      }));
-    } catch (error) {
-      console.error("Error geocoding coordinates:", error);
-      if (isMounted.current) {
-        setLocationNames((prev) => ({
-          ...prev,
-          [helmetId]: "Unknown Location",
-        }));
-      }
-    }
+  // Map signal strength value to SignalStrength type
+  const mapSignalStrength = (value: string): SignalStrength => {
+    const dbm = parseInt(value) || -100; // Default to poor if invalid
+    if (dbm >= -50) return "excellent";
+    if (dbm >= -70) return "good";
+    return "poor";
   };
 
-  // Simulate ThingSpeak API calls every 10 seconds
+  // Fetch ThingSpeak data every 30 seconds
   useEffect(() => {
     const fetchThingSpeakData = async () => {
       if (!isMounted.current) return;
@@ -168,116 +82,107 @@ export function HelmetDataProvider({
       setIsUpdating(true);
 
       try {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const apiKey =
+          process.env.NEXT_PUBLIC_THINGSPEAK_SMC_MONITORING_READ_API_KEY;
+        const channelId =
+          process.env.NEXT_PUBLIC_THING_SPEAK_SMC_MONITORING_CHANNEL_ID;
 
-        const updatedData = { ...helmetsData };
-        let hasLocationChanges = false;
+        if (!apiKey || !channelId) {
+          throw new Error("Missing ThingSpeak API key or Channel ID");
+        }
 
-        // Update each helmet with "new" data from ThingSpeak
-        Object.keys(updatedData).forEach((helmetId) => {
-          const currentData = updatedData[helmetId];
+        const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&results=1`;
+        const response = await fetch(url);
 
-          // Generate random battery level (decreasing slightly over time)
-          const currentBattery = Number.parseInt(
-            currentData.battery.replace("%", "")
-          );
-          const newBattery = Math.max(
-            1,
-            currentBattery - Math.floor(Math.random() * 2)
-          );
+        console.log("Fetching ThingSpeak data from:", url);
 
-          // Generate random temperature (fluctuating slightly)
-          const currentTemp = Number.parseInt(
-            currentData.temperature.replace("°C", "")
-          );
-          const tempChange = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-          const newTemp = Math.min(40, Math.max(20, currentTemp + tempChange));
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-          // Update signal strength occasionally
-          const signalOptions: SignalStrength[] = ["excellent", "good", "poor"];
-          const newSignal =
-            Math.random() > 0.9
-              ? signalOptions[Math.floor(Math.random() * signalOptions.length)]
-              : currentData.signalStrength;
+        const data = await response.json();
+        const feeds = data.feeds || [];
 
-          // Update status occasionally (mostly active)
-          const newStatus = Math.random() > 0.95 ? "inactive" : "active";
+        console.log(`Feeds: ${feeds.length}`);
 
-          // Occasionally update location (simulating movement)
-          let newLat = Number.parseFloat(currentData.latitude);
-          let newLng = Number.parseFloat(currentData.longitude);
-
-          if (Math.random() > 0.7) {
-            // 30% chance to move
-            // Move slightly in a random direction
-            newLat += (Math.random() - 0.5) * 0.002;
-            newLng += (Math.random() - 0.5) * 0.002;
-            hasLocationChanges = true;
+        if (feeds.length === 0) {
+          if (isMounted.current) {
+            setLastUpdated(new Date());
+            setIsUpdating(false);
           }
+          return;
+        }
 
-          // Update helmet data
-          updatedData[helmetId] = {
-            battery: `${newBattery}%`,
-            temperature: `${newTemp}°C`,
-            signalStrength: newSignal,
-            status: newStatus,
-            latitude: newLat.toFixed(6),
-            longitude: newLng.toFixed(6),
-            lastActiveAt: new Date(),
-          };
+        // Process only the latest feed
+        const feed = feeds[0]; // Single feed from results=1
 
-          // Show notifications for important changes
-          if (newBattery <= 20 && currentBattery > 20) {
-            toast.warning(`Low battery alert: ${helmetId} at ${newBattery}%`, {
-              id: `low-battery-${helmetId}`,
+        console.log("Lastest feed:", feed);
+
+        const helmetId = feed.field4;
+        const latitude = feed.field1;
+        const longitude = feed.field2;
+        const battery = feed.field3;
+        const temperature = feed.field5;
+        const status = feed.field6;
+        const signalStrength = feed.field7;
+        const lastActiveAt = feed.created_at;
+
+        // Notifications
+
+        const newBattery = parseInt(feed.field3?.replace("%", "") || "0");
+        const currentBattery = parseInt(battery?.replace("%", "") || "100");
+
+        if (newBattery <= 20 && currentBattery > 20) {
+          toast.warning(`Low battery alert: ${helmetId} at ${newBattery}%`, {
+            id: `low-battery-${helmetId}`,
+          });
+        }
+
+        if (feed.field6 !== status) {
+          if (feed.field6 === "inactive") {
+            toast.error(`Helmet ${helmetId} is now inactive`, {
+              id: `status-${helmetId}`,
             });
-          }
-
-          if (newStatus !== currentData.status) {
-            if (newStatus === "inactive") {
-              toast.error(`Helmet ${helmetId} is now inactive`, {
-                id: `status-${helmetId}`,
-              });
-            } else if (currentData.status === "inactive") {
-              toast.success(`Helmet ${helmetId} is now active`, {
-                id: `status-${helmetId}`,
-              });
-            }
-          }
-        });
-
-        if (isMounted.current) {
-          setHelmetsData(updatedData);
-          setLastUpdated(new Date());
-
-          // Update location names if coordinates have changed
-          if (hasLocationChanges) {
-            Object.entries(updatedData).forEach(([helmetId, data]) => {
-              geocodeCoordinates(data.latitude, data.longitude, helmetId);
+          } else if (status === "inactive") {
+            toast.success(`Helmet ${helmetId} is now active`, {
+              id: `status-${helmetId}`,
             });
           }
         }
+
+        setHelmetsData((prevData) => ({
+          ...prevData,
+          [helmetId]: {
+            battery: `${battery}%`,
+            temperature: `${temperature}°C`,
+            status: status || "inactive",
+            signalStrength: mapSignalStrength(signalStrength),
+            latitude: latitude || "0.0",
+            longitude: longitude || "0.0",
+            lastActiveAt: new Date(lastActiveAt),
+          },
+        }));
+        setLastUpdated(new Date());
+        lastProcessedTimestamp.current = feed.created_at;
       } catch (error) {
         console.error("Error fetching ThingSpeak data:", error);
+        toast.error("Failed to fetch helmet data");
       } finally {
-        if (isMounted.current) {
-          setIsUpdating(false);
-        }
+        setIsUpdating(false);
       }
     };
 
     // Initial fetch
     fetchThingSpeakData();
 
-    // Set up interval for periodic updates
-    const intervalId = setInterval(fetchThingSpeakData, 10000);
+    // Fetch every 30 seconds
+    const intervalId = setInterval(fetchThingSpeakData, 30_000);
 
     return () => {
       clearInterval(intervalId);
       isMounted.current = false;
     };
-  }, [helmetsData]);
+  }, [helmetsData, initialHelmets]);
 
   return (
     <HelmetDataContext.Provider
@@ -285,7 +190,6 @@ export function HelmetDataProvider({
         helmetsData,
         isUpdating,
         lastUpdated,
-        locationNames,
       }}
     >
       {children}

@@ -25,18 +25,16 @@ function HelmetCard({
   helmet,
   riderName,
   riders,
-  locationName,
 }: {
   helmet: Helmet;
   riderName: string;
   riders: Rider[];
-  locationName: string;
 }) {
   // Get real-time data from context
   const { helmetsData, isUpdating } = useHelmetData();
 
   // Use real-time data from ThingSpeak
-  const thingSpeakData = helmetsData[helmet.id];
+  const thingSpeakData = helmetsData[helmet.helmetId];
 
   // If no ThingSpeak data is available yet, show loading state
   if (!thingSpeakData) {
@@ -103,6 +101,9 @@ function HelmetCard({
   // Format the last active time
   const timeAgo = getTimeAgo(thingSpeakData.lastActiveAt);
 
+  // Google Maps URL for the helmet's location
+  const googleMapsUrl = `https://www.google.com/maps?daddr=${thingSpeakData.latitude},${thingSpeakData.longitude}`;
+
   return (
     <div
       className={`rounded-lg border p-4 ${getStatusColor(thingSpeakData.status)}`}
@@ -164,7 +165,14 @@ function HelmetCard({
             <span className="font-medium mr-1">Location:</span>
             <span className="flex items-center">
               <MapPin className="h-3 w-3 mr-1 mt-0.5 flex-shrink-0" />
-              {locationName}
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                View on Google Maps
+              </a>
             </span>
           </p>
           <p className="text-sm">
@@ -199,7 +207,11 @@ function getTimeAgo(date: Date): string {
 
 export function HelmetGrid({ helmets, riders }: HelmetGridProps) {
   // Get real-time data from context
-  const { helmetsData, lastUpdated, locationNames } = useHelmetData();
+  const { helmetsData, lastUpdated } = useHelmetData();
+
+  console.log("HelmetGrid helmetsData:", helmetsData);
+
+  console.log(helmetsData);
 
   // Sort helmets by status (active first) and then by lastActiveAt (most recent first)
   const sortedHelmets = useMemo(() => {
@@ -242,7 +254,6 @@ export function HelmetGrid({ helmets, riders }: HelmetGridProps) {
               helmet={helmet}
               riderName={getRiderName(helmet.riderId)}
               riders={riders}
-              locationName={locationNames[helmet.id] || "Unknown Location"}
             />
           ))
         ) : (

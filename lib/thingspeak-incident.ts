@@ -1,10 +1,3 @@
-/**
- * ThingSpeak Incident Simulation
- *
- * This file simulates ThingSpeak API for incident data.
- * In a real implementation, you would make actual API calls to ThingSpeak.
- */
-
 import type { Severity } from "@/lib/generated/prisma";
 
 // Define the structure of incident data from ThingSpeak
@@ -12,148 +5,77 @@ export interface ThingSpeakIncidentData {
   elementId: string; // Unique identifier for the incident
   latitude: string;
   longitude: string;
-  tiltX: number; // Tilt values to calculate severity
-  tiltY: number;
-  tiltZ: number;
+  speed: string; // Speed in meters/second
+  helmetId: string; // Helmet ID from field4
+  severity: Severity | null; // Severity from field5
   timestamp: Date;
   processed: boolean; // Flag to track if this incident has been processed
 }
 
-// Store for simulated incidents
-let simulatedIncidents: ThingSpeakIncidentData[] = [];
+// Fetch incident data from ThingSpeak
+export async function fetchIncidentData(): Promise<ThingSpeakIncidentData | null> {
+  try {
+    const apiKey = process.env.NEXT_PUBLIC_THINGSPEAK_SMC_READ_API_KEY;
+    const channelId = process.env.NEXT_PUBLIC_THING_SPEAK_SMC_CHANNEL_ID;
 
-// Function to simulate fetching incident data from ThingSpeak
-export async function fetchIncidentData(): Promise<ThingSpeakIncidentData[]> {
-  // In a real implementation, you would make an API call to ThingSpeak
-  // For simulation, we'll randomly generate incidents
+    if (!apiKey || !channelId) {
+      throw new Error("Missing ThingSpeak API key or Incident Channel ID");
+    }
 
-  // 10% chance of generating a new incident
-  if (Math.random() < 0.1 && simulatedIncidents.length < 10) {
-    generateRandomIncident();
+    const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&results=2`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const feeds = data.feeds || [];
+
+    if (feeds.length === 0) {
+      return null; // No feeds available
+    }
+
+    // Take the latest feed (last in array, assuming ordered by created_at)
+    const latestFeed = feeds[feeds.length - 1];
+
+    return {
+      elementId: `ELEM-${latestFeed.entry_id}`,
+      latitude: latestFeed.field1 || "0.0",
+      longitude: latestFeed.field2 || "0.0",
+      speed: latestFeed.field3 || "0.0",
+      helmetId: latestFeed.field4 || "",
+      severity: (latestFeed.field5 as Severity) || null,
+      timestamp: new Date(latestFeed.created_at),
+      processed: true,
+    };
+  } catch (error) {
+    console.error("Error fetching ThingSpeak incident data:", error);
+    return null;
   }
-
-  return simulatedIncidents.filter((incident) => !incident.processed);
 }
 
-// Function to mark an incident as processed
-export function markIncidentAsProcessed(elementId: string): void {
-  const incident = simulatedIncidents.find(
-    (inc) => inc.elementId === elementId
-  );
-  if (incident) {
-    incident.processed = true;
-  }
-}
-
-// Function to generate a random incident
-function generateRandomIncident(): void {
-  // Base coordinates (Kampala, Uganda)
-  const baseLat = 0.347596;
-  const baseLng = 32.58252;
-
-  // Random offset for coordinates
-  const latOffset = (Math.random() - 0.5) * 0.05;
-  const lngOffset = (Math.random() - 0.5) * 0.05;
-
-  // Random tilt values
-  // Higher absolute values indicate more severe incidents
-  const tiltX = (Math.random() - 0.5) * 180;
-  const tiltY = (Math.random() - 0.5) * 180;
-  const tiltZ = (Math.random() - 0.5) * 180;
-
-  const newIncident: ThingSpeakIncidentData = {
-    elementId: `ELEM-${Math.floor(Math.random() * 10000)}`,
-    latitude: (baseLat + latOffset).toFixed(6),
-    longitude: (baseLng + lngOffset).toFixed(6),
-    tiltX,
-    tiltY,
-    tiltZ,
-    timestamp: new Date(),
-    processed: false,
+// Generate description based on severity
+export function generateDescription(severity: Severity | null): string {
+  const descriptions: Record<Severity, string[]> = {
+    severe: [
+      "Severe impact detected, possible collision",
+      "Major crash detected, immediate attention required",
+      "Critical incident: Significant impact recorded",
+    ],
+    moderate: [
+      "Moderate impact detected, possible fall",
+      "Potential accident: Moderate forces detected",
+      "Rider may have fallen, moderate impact recorded",
+    ],
+    minor: [
+      "Minor impact detected, rider may have stumbled",
+      "Minor incident: Small impact recorded",
+      "Slight disturbance in riding pattern",
+    ],
   };
 
-  simulatedIncidents.push(newIncident);
-
-  // Keep only the last 20 incidents
-  if (simulatedIncidents.length > 20) {
-    simulatedIncidents = simulatedIncidents.slice(-20);
-  }
-}
-
-// Function to calculate severity based on tilt values
-export function calculateSeverity(
-  tiltX: number,
-  tiltY: number,
-  tiltZ: number
-): Severity {
-  // Calculate the magnitude of the tilt
-  const tiltMagnitude = Math.sqrt(
-    tiltX * tiltX + tiltY * tiltY + tiltZ * tiltZ
-  );
-
-  // Determine severity based on tilt magnitude
-  if (tiltMagnitude > 120) {
-    return "severe";
-  } else if (tiltMagnitude > 60) {
-    return "moderate";
-  } else {
-    return "minor";
-  }
-}
-
-// Function to generate description based on tilt values and severity
-export function generateDescription(
-  tiltX: number,
-  tiltY: number,
-  tiltZ: number,
-  severity: Severity
-): string {
-  const tiltMagnitude = Math.sqrt(
-    tiltX * tiltX + tiltY * tiltY + tiltZ * tiltZ
-  );
-
-  // Base descriptions by severity
-  const severeDescriptions = [
-    "Severe impact detected, possible collision",
-    "Major crash detected, immediate attention required",
-    "Critical incident: Helmet detected significant impact",
-    "Severe accident detected, emergency response advised",
-    "High-impact collision detected",
-  ];
-
-  const moderateDescriptions = [
-    "Moderate impact detected, possible fall",
-    "Unusual movement pattern detected, potential accident",
-    "Helmet detected moderate impact, rider may need assistance",
-    "Potential accident: Moderate forces detected",
-    "Rider may have fallen, moderate impact recorded",
-  ];
-
-  const minorDescriptions = [
-    "Minor impact detected, rider may have stumbled",
-    "Slight unusual movement detected",
-    "Minor incident: Helmet detected small impact",
-    "Slight disturbance in riding pattern",
-    "Minor irregularity detected in helmet position",
-  ];
-
-  // Select a random description based on severity
-  let descriptions;
-  switch (severity) {
-    case "severe":
-      descriptions = severeDescriptions;
-      break;
-    case "moderate":
-      descriptions = moderateDescriptions;
-      break;
-    default:
-      descriptions = minorDescriptions;
-  }
-
-  return descriptions[Math.floor(Math.random() * descriptions.length)];
-}
-
-// Reset all simulated incidents (for testing)
-export function resetSimulatedIncidents(): void {
-  simulatedIncidents = [];
+  const effectiveSeverity = severity || "minor";
+  const options = descriptions[effectiveSeverity];
+  return options[Math.floor(Math.random() * options.length)];
 }

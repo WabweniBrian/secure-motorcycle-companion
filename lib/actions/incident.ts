@@ -72,9 +72,20 @@ export const createIncident = async (values: IncidentFormValues) => {
       validatedFields.incidentId = `INC-${(count + 101).toString().padStart(3, "0")}`;
     }
 
-    const incident = await prisma.incident.create({
-      data: validatedFields,
+    // Check if the incident already exists by date
+    const existingIncident = await prisma.incident.findFirst({
+      where: {
+        date: validatedFields.date,
+        helmetId: validatedFields.helmetId,
+      },
     });
+
+    if (!existingIncident) {
+      console.log("Creating new incident:", validatedFields);
+      await prisma.incident.create({
+        data: validatedFields,
+      });
+    }
 
     // Update rider's hasHadIncident status
     await prisma.rider.update({
@@ -83,7 +94,7 @@ export const createIncident = async (values: IncidentFormValues) => {
     });
 
     revalidatePath("/incidents");
-    return { success: true, data: incident };
+    return { success: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { success: false, error: error.errors };
