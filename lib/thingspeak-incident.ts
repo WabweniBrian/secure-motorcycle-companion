@@ -22,7 +22,7 @@ export async function fetchIncidentData(): Promise<ThingSpeakIncidentData | null
       throw new Error("Missing ThingSpeak API key or Incident Channel ID");
     }
 
-    const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&results=2`;
+    const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?api_key=${apiKey}&results=20`;
     const response = await fetch(url);
 
     if (!response.ok) {
