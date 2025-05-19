@@ -10,6 +10,7 @@ import {
 import type React from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import type { ThingSpeakIncidentData } from "@/lib/thingspeak-incident";
 
 interface IncidentDataContextType {
   isChecking: boolean;
@@ -44,16 +45,11 @@ export function IncidentDataProvider({
     setIsChecking(true);
 
     try {
-      const incident = await fetchIncidentData();
+      const incidents = await fetchIncidentData();
 
-      console.log("Fetched incident data:", incident);
+      console.log("Fetched incidents:", incidents);
 
-      console.log(!incident);
-      console.log(!incident?.helmetId);
-      console.log(incident?.processed);
-
-      if (!incident || !incident.helmetId || !incident.processed) {
-        // No new feed or invalid helmetId
+      if (incidents.length === 0) {
         if (isMounted.current) {
           setLastChecked(new Date());
           setIsChecking(false);
@@ -61,43 +57,44 @@ export function IncidentDataProvider({
         return;
       }
 
-      // Validate helmetId
-      const helmet = helmets.find((h) => h.helmetId === incident.helmetId);
-      if (!helmet) {
-        console.warn(`No helmet found for ID: ${incident.helmetId}`);
-        if (isMounted.current) {
-          setLastChecked(new Date());
-          setIsChecking(false);
+      for (const incident of incidents) {
+        // Skip invalid helmetId (optional: store as minimal incident instead)
+        if (!incident.helmetId) {
+          console.warn(`No helmet ID for incident: ${incident.elementId}`);
+          continue; // Or create minimal incident (see below)
         }
-        return;
-      }
 
-      // Get location name
+        const helmet = helmets.find((h) => h.helmetId === incident.helmetId);
+        if (!helmet) {
+          console.warn(`No helmet found for ID: ${incident.helmetId}`);
+          continue; // Or create minimal incident
+        }
 
-      console.log("Helmet location:", location);
+        const description = generateDescription(incident.severity);
 
-      // Generate description
-      const description = generateDescription(incident.severity);
+        const result = await createIncident({
+          incidentId: `INC-${incident.elementId.split("-")[1].padStart(3, "0")}`,
+          riderId: helmet.riderId,
+          helmetId: helmet.id,
+          longitude: incident.longitude,
+          latitude: incident.latitude,
+          description,
+          date: incident.timestamp,
+          status: IncidentStatus.active,
+          severity: incident.severity || "minor",
+          entryId: incident.entryId,
+        });
 
-      // Create incident in the database
-      const result = await createIncident({
-        incidentId: `INC-${incident.elementId.split("-")[1].padStart(3, "0")}`,
-        riderId: helmet.riderId,
-        helmetId: helmet.id,
-        longitude: incident.longitude,
-        latitude: incident.latitude,
-        description,
-        date: incident.timestamp,
-        status: IncidentStatus.active,
-        severity: incident.severity || "minor",
-      });
-
-      if (result.success) {
-        toast.success(
-          `New ${incident.severity || "minor"} incident detected for ${helmet.helmetId}`
-        );
-      } else {
-        console.error("Failed to create incident:", result.error);
+        if (result.success) {
+          toast.success(
+            `New ${incident.severity || "minor"} incident detected for ${helmet.helmetId}`
+          );
+        } else {
+          console.error(
+            `Failed to create incident ${incident.elementId}:`,
+            result.error
+          );
+        }
       }
 
       if (isMounted.current) {
@@ -113,7 +110,6 @@ export function IncidentDataProvider({
     }
   };
 
-  // Check for incidents every 30 seconds
   useEffect(() => {
     processIncidentData();
     const intervalId = setInterval(processIncidentData, 30_000);

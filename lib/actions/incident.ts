@@ -17,6 +17,7 @@ const IncidentSchema = z.object({
   date: z.date(),
   status: z.nativeEnum(IncidentStatus),
   severity: z.nativeEnum(Severity),
+  entryId: z.number().optional(),
 });
 
 export type IncidentFormValues = z.infer<typeof IncidentSchema>;
@@ -62,6 +63,13 @@ export const getIncidentById = async (id: string) => {
   }
 };
 
+export const getProcessedEntryIds = async () => {
+  return await prisma.incident.findMany({
+    where: { entryId: { not: null } },
+    select: { entryId: true },
+  });
+};
+
 export const createIncident = async (values: IncidentFormValues) => {
   try {
     const validatedFields = IncidentSchema.parse(values);
@@ -72,11 +80,10 @@ export const createIncident = async (values: IncidentFormValues) => {
       validatedFields.incidentId = `INC-${(count + 101).toString().padStart(3, "0")}`;
     }
 
-    // Check if the incident already exists by date
+    // Check if the incident already exists by entryId
     const existingIncident = await prisma.incident.findFirst({
       where: {
-        date: validatedFields.date,
-        helmetId: validatedFields.helmetId,
+        entryId: validatedFields.entryId,
       },
     });
 

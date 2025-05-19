@@ -5885,8 +5885,18 @@ export namespace Prisma {
 
   export type AggregateIncident = {
     _count: IncidentCountAggregateOutputType | null
+    _avg: IncidentAvgAggregateOutputType | null
+    _sum: IncidentSumAggregateOutputType | null
     _min: IncidentMinAggregateOutputType | null
     _max: IncidentMaxAggregateOutputType | null
+  }
+
+  export type IncidentAvgAggregateOutputType = {
+    entryId: number | null
+  }
+
+  export type IncidentSumAggregateOutputType = {
+    entryId: number | null
   }
 
   export type IncidentMinAggregateOutputType = {
@@ -5901,6 +5911,7 @@ export namespace Prisma {
     date: Date | null
     status: $Enums.IncidentStatus | null
     severity: $Enums.Severity | null
+    entryId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -5917,6 +5928,7 @@ export namespace Prisma {
     date: Date | null
     status: $Enums.IncidentStatus | null
     severity: $Enums.Severity | null
+    entryId: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -5933,11 +5945,20 @@ export namespace Prisma {
     date: number
     status: number
     severity: number
+    entryId: number
     createdAt: number
     updatedAt: number
     _all: number
   }
 
+
+  export type IncidentAvgAggregateInputType = {
+    entryId?: true
+  }
+
+  export type IncidentSumAggregateInputType = {
+    entryId?: true
+  }
 
   export type IncidentMinAggregateInputType = {
     id?: true
@@ -5951,6 +5972,7 @@ export namespace Prisma {
     date?: true
     status?: true
     severity?: true
+    entryId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -5967,6 +5989,7 @@ export namespace Prisma {
     date?: true
     status?: true
     severity?: true
+    entryId?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -5983,6 +6006,7 @@ export namespace Prisma {
     date?: true
     status?: true
     severity?: true
+    entryId?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -6026,6 +6050,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: IncidentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: IncidentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: IncidentMinAggregateInputType
@@ -6056,6 +6092,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: IncidentCountAggregateInputType | true
+    _avg?: IncidentAvgAggregateInputType
+    _sum?: IncidentSumAggregateInputType
     _min?: IncidentMinAggregateInputType
     _max?: IncidentMaxAggregateInputType
   }
@@ -6072,9 +6110,12 @@ export namespace Prisma {
     date: Date
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId: number | null
     createdAt: Date
     updatedAt: Date
     _count: IncidentCountAggregateOutputType | null
+    _avg: IncidentAvgAggregateOutputType | null
+    _sum: IncidentSumAggregateOutputType | null
     _min: IncidentMinAggregateOutputType | null
     _max: IncidentMaxAggregateOutputType | null
   }
@@ -6105,6 +6146,7 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     severity?: boolean
+    entryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     rider?: boolean | RiderDefaultArgs<ExtArgs>
@@ -6123,6 +6165,7 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     severity?: boolean
+    entryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     rider?: boolean | RiderDefaultArgs<ExtArgs>
@@ -6141,6 +6184,7 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     severity?: boolean
+    entryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     rider?: boolean | RiderDefaultArgs<ExtArgs>
@@ -6159,11 +6203,12 @@ export namespace Prisma {
     date?: boolean
     status?: boolean
     severity?: boolean
+    entryId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type IncidentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "incidentId" | "riderId" | "helmetId" | "longitude" | "latitude" | "location" | "description" | "date" | "status" | "severity" | "createdAt" | "updatedAt", ExtArgs["result"]["incident"]>
+  export type IncidentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "incidentId" | "riderId" | "helmetId" | "longitude" | "latitude" | "location" | "description" | "date" | "status" | "severity" | "entryId" | "createdAt" | "updatedAt", ExtArgs["result"]["incident"]>
   export type IncidentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     rider?: boolean | RiderDefaultArgs<ExtArgs>
     helmet?: boolean | HelmetDefaultArgs<ExtArgs>
@@ -6195,6 +6240,7 @@ export namespace Prisma {
       date: Date
       status: $Enums.IncidentStatus
       severity: $Enums.Severity
+      entryId: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["incident"]>
@@ -6633,6 +6679,7 @@ export namespace Prisma {
     readonly date: FieldRef<"Incident", 'DateTime'>
     readonly status: FieldRef<"Incident", 'IncidentStatus'>
     readonly severity: FieldRef<"Incident", 'Severity'>
+    readonly entryId: FieldRef<"Incident", 'Int'>
     readonly createdAt: FieldRef<"Incident", 'DateTime'>
     readonly updatedAt: FieldRef<"Incident", 'DateTime'>
   }
@@ -7139,6 +7186,7 @@ export namespace Prisma {
     date: 'date',
     status: 'status',
     severity: 'severity',
+    entryId: 'entryId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -7291,6 +7339,20 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
   /**
    * Deep Input Types
@@ -7638,6 +7700,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"Incident"> | Date | string
     status?: EnumIncidentStatusFilter<"Incident"> | $Enums.IncidentStatus
     severity?: EnumSeverityFilter<"Incident"> | $Enums.Severity
+    entryId?: IntNullableFilter<"Incident"> | number | null
     createdAt?: DateTimeFilter<"Incident"> | Date | string
     updatedAt?: DateTimeFilter<"Incident"> | Date | string
     rider?: XOR<RiderScalarRelationFilter, RiderWhereInput>
@@ -7656,6 +7719,7 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     severity?: SortOrder
+    entryId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     rider?: RiderOrderByWithRelationInput
@@ -7665,6 +7729,7 @@ export namespace Prisma {
   export type IncidentWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     incidentId?: string
+    entryId?: number
     AND?: IncidentWhereInput | IncidentWhereInput[]
     OR?: IncidentWhereInput[]
     NOT?: IncidentWhereInput | IncidentWhereInput[]
@@ -7681,7 +7746,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Incident"> | Date | string
     rider?: XOR<RiderScalarRelationFilter, RiderWhereInput>
     helmet?: XOR<HelmetScalarRelationFilter, HelmetWhereInput>
-  }, "id" | "incidentId">
+  }, "id" | "incidentId" | "entryId">
 
   export type IncidentOrderByWithAggregationInput = {
     id?: SortOrder
@@ -7695,11 +7760,14 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     severity?: SortOrder
+    entryId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: IncidentCountOrderByAggregateInput
+    _avg?: IncidentAvgOrderByAggregateInput
     _max?: IncidentMaxOrderByAggregateInput
     _min?: IncidentMinOrderByAggregateInput
+    _sum?: IncidentSumOrderByAggregateInput
   }
 
   export type IncidentScalarWhereWithAggregatesInput = {
@@ -7717,6 +7785,7 @@ export namespace Prisma {
     date?: DateTimeWithAggregatesFilter<"Incident"> | Date | string
     status?: EnumIncidentStatusWithAggregatesFilter<"Incident"> | $Enums.IncidentStatus
     severity?: EnumSeverityWithAggregatesFilter<"Incident"> | $Enums.Severity
+    entryId?: IntNullableWithAggregatesFilter<"Incident"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"Incident"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Incident"> | Date | string
   }
@@ -8109,6 +8178,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     rider: RiderCreateNestedOneWithoutIncidentsInput
@@ -8127,6 +8197,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -8141,6 +8212,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rider?: RiderUpdateOneRequiredWithoutIncidentsNestedInput
@@ -8159,6 +8231,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8175,6 +8248,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -8189,6 +8263,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8205,6 +8280,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -8589,6 +8665,17 @@ export namespace Prisma {
     not?: NestedEnumSeverityFilter<$PrismaModel> | $Enums.Severity
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type HelmetScalarRelationFilter = {
     is?: HelmetWhereInput
     isNot?: HelmetWhereInput
@@ -8606,8 +8693,13 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     severity?: SortOrder
+    entryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type IncidentAvgOrderByAggregateInput = {
+    entryId?: SortOrder
   }
 
   export type IncidentMaxOrderByAggregateInput = {
@@ -8622,6 +8714,7 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     severity?: SortOrder
+    entryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -8638,8 +8731,13 @@ export namespace Prisma {
     date?: SortOrder
     status?: SortOrder
     severity?: SortOrder
+    entryId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type IncidentSumOrderByAggregateInput = {
+    entryId?: SortOrder
   }
 
   export type EnumIncidentStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -8660,6 +8758,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSeverityFilter<$PrismaModel>
     _max?: NestedEnumSeverityFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -8888,6 +9002,14 @@ export namespace Prisma {
 
   export type EnumSeverityFieldUpdateOperationsInput = {
     set?: $Enums.Severity
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type RiderUpdateOneRequiredWithoutIncidentsNestedInput = {
@@ -9138,6 +9260,33 @@ export namespace Prisma {
     _max?: NestedEnumSeverityFilter<$PrismaModel>
   }
 
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
   export type ContactCreateWithoutRiderInput = {
     id?: string
     name: string
@@ -9208,6 +9357,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     helmet: HelmetCreateNestedOneWithoutIncidentsInput
@@ -9224,6 +9374,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -9341,6 +9492,7 @@ export namespace Prisma {
     date?: DateTimeFilter<"Incident"> | Date | string
     status?: EnumIncidentStatusFilter<"Incident"> | $Enums.IncidentStatus
     severity?: EnumSeverityFilter<"Incident"> | $Enums.Severity
+    entryId?: IntNullableFilter<"Incident"> | number | null
     createdAt?: DateTimeFilter<"Incident"> | Date | string
     updatedAt?: DateTimeFilter<"Incident"> | Date | string
   }
@@ -9460,6 +9612,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     rider: RiderCreateNestedOneWithoutIncidentsInput
@@ -9476,6 +9629,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -9704,6 +9858,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -9718,6 +9873,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     helmet?: HelmetUpdateOneRequiredWithoutIncidentsNestedInput
@@ -9734,6 +9890,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9749,6 +9906,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9764,6 +9922,7 @@ export namespace Prisma {
     date: Date | string
     status: $Enums.IncidentStatus
     severity: $Enums.Severity
+    entryId?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -9778,6 +9937,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rider?: RiderUpdateOneRequiredWithoutIncidentsNestedInput
@@ -9794,6 +9954,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -9809,6 +9970,7 @@ export namespace Prisma {
     date?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumIncidentStatusFieldUpdateOperationsInput | $Enums.IncidentStatus
     severity?: EnumSeverityFieldUpdateOperationsInput | $Enums.Severity
+    entryId?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

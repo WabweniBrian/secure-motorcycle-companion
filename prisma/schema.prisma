@@ -1,7 +1,7 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // directUrl = env("DATABASE_URL_UNPOOLED")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 generator client {
@@ -97,6 +97,7 @@ model Incident {
   date        DateTime
   status      IncidentStatus
   severity    Severity // Calculated severity - From ThingSpeak
+  entryId     Int?           @unique
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
